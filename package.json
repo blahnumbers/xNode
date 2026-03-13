@@ -1,7 +1,9 @@
 {
   "name": "com.github.blahnumbers.xnode",
+  "displayName": "xNode",
+  "author": { "name": "Blahnumbers", "url": "https://github.com/blahnumbers" },
   "description": "A custom fork of xNode, adapted for Bard Dialogue System.",
   "version": "1.8.1",
   "unity": "2018.1",
-  "displayName": "xNode"
+  "license": "MIT"
 }
