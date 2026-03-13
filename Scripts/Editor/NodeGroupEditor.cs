@@ -9,7 +9,7 @@ using XNode.NodeGroups;
 namespace XNodeEditor.NodeGroups {
 	[CustomNodeEditor(typeof(NodeGroup))]
 	public class NodeGroupEditor : NodeEditor {
-		private NodeGroup group { get { return _group != null ? _group : _group = target as NodeGroup; } }
+		protected NodeGroup group { get { return _group != null ? _group : _group = target as NodeGroup; } }
 		private NodeGroup _group;
 		public static Texture2D corner { get { return _corner != null ? _corner : _corner = Resources.Load<Texture2D>("xnode_corner"); } }
 		private static Texture2D _corner;

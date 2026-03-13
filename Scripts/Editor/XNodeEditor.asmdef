@@ -1,7 +1,9 @@
 ﻿{
     "name": "XNodeEditor",
     "references": [
-        "XNode"
+        "XNode",
+	"XNodeEditor",
+        "XNode.Groups"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
