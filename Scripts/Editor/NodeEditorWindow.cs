@@ -113,6 +113,7 @@ namespace XNodeEditor {
         }
 
         /// <summary> Create editor window </summary>
+        MenuItem("Window/xNode/New Window", false, 100)]
         public static NodeEditorWindow Init() {
             NodeEditorWindow w = CreateInstance<NodeEditorWindow>();
             w.titleContent = new GUIContent("xNode");
@@ -199,9 +200,11 @@ namespace XNodeEditor {
         public static NodeEditorWindow Open(XNode.NodeGraph graph) {
             if (!graph) return null;
 
-            NodeEditorWindow w = GetWindow(typeof(NodeEditorWindow), false, "xNode", true) as NodeEditorWindow;
+            NodeEditorWindow w = current != null ? current : GetWindow(typeof(NodeEditorWindow), false, null, true) as NodeEditorWindow;
             w.wantsMouseMove = true;
             w.graph = graph;
+            w.titleContent.text = $"xNode [{graph.name}]";
+            RepaintAll();
             return w;
         }
 

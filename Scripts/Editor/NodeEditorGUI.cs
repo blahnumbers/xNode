@@ -342,8 +342,7 @@ namespace XNodeEditor {
                 // Draw full connections and output > reroute
                 foreach (XNode.NodePort output in node.Outputs) {
                     //Needs cleanup. Null checks are ugly
-                    Rect fromRect;
-                    if (!_portConnectionPoints.TryGetValue(output, out fromRect)) continue;
+                    if (!_portConnectionPoints.TryGetValue(output, out Rect fromRect)) continue;
 
                     Color portColor = graphEditor.GetPortColor(output);
                     GUIStyle portStyle = graphEditor.GetPortStyle(output);
@@ -359,8 +358,7 @@ namespace XNodeEditor {
                         // Error handling
                         if (input == null) continue; //If a script has been updated and the port doesn't exist, it is removed and null is returned. If this happens, return.
                         if (!input.IsConnectedTo(output)) input.Connect(output);
-                        Rect toRect;
-                        if (!_portConnectionPoints.TryGetValue(input, out toRect)) continue;
+                        if (!_portConnectionPoints.TryGetValue(input, out Rect toRect)) continue;
 
                         List<Vector2> reroutePoints = output.GetReroutePoints(k);
 
@@ -438,6 +436,7 @@ namespace XNodeEditor {
             List<XNode.NodePort> removeEntries = new List<XNode.NodePort>();
 
             if (e.type == EventType.Layout) culledNodes.Clear();
+            bool withCulling = _portConnectionPoints.Count > 0;
             for (int n = 0; n < graph.nodes.Count; n++) {
                 // Skip null nodes. The user could be in the process of renaming scripts, so removing them at this point is not advisable.
                 if (graph.nodes[n] == null) continue;
@@ -445,13 +444,15 @@ namespace XNodeEditor {
                 XNode.Node node = graph.nodes[n];
 
                 // Culling
-                if (e.type == EventType.Layout) {
-                    // Cull unselected nodes outside view
-                    if (!Selection.Contains(node) && ShouldBeCulled(node)) {
-                        culledNodes.Add(node);
-                        continue;
-                    }
-                } else if (culledNodes.Contains(node)) continue;
+                if (withCulling) {
+                    if (e.type == EventType.Layout) {
+                        // Cull unselected nodes outside view
+                        if (!Selection.Contains(node) && ShouldBeCulled(node)) {
+                            culledNodes.Add(node);
+                            continue;
+                        }
+                    } else if (culledNodes.Contains(node)) continue;
+                }
 
                 if (e.type == EventType.Repaint) {
                     removeEntries.Clear();
@@ -470,7 +471,7 @@ namespace XNodeEditor {
                 //Get node position
                 Vector2 nodePos = GridToWindowPositionNoClipped(node.position);
 
-                GUILayout.BeginArea(new Rect(nodePos, new Vector2(nodeEditor.GetWidth(), 4000)));
+                GUILayout.BeginArea(new Rect(nodePos, new Vector2(nodeEditor.GetWidth(), 8000)));
 
                 bool selected = selectionCache.Contains(graph.nodes[n]);
 

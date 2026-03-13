@@ -50,7 +50,7 @@ namespace XNodeEditor {
             Event e = Event.current;
             // If input is empty, revert name to default instead
             if (input == null || input.Trim() == "") {
-                if (GUILayout.Button("Revert to default") || (e.isKey && e.keyCode == KeyCode.Return)) {
+                if (GUILayout.Button("Revert to default") || (e.isKey && e.type == EventType.KeyDown && e.keyCode == KeyCode.Return)) {
                     target.name = NodeEditorUtilities.NodeDefaultName(target.GetType());
                     NodeEditor.GetEditor((XNode.Node)target, NodeEditorWindow.current).OnRename();
                     if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target))) {
@@ -63,7 +63,7 @@ namespace XNodeEditor {
             }
             // Rename asset to input text
             else {
-                if (GUILayout.Button("Apply") || (e.isKey && e.keyCode == KeyCode.Return)) {
+                if (GUILayout.Button("Apply") || (e.isKey && e.type == EventType.KeyDown && e.keyCode == KeyCode.Return)) {
                     target.name = input;
                     NodeEditor.GetEditor((XNode.Node)target, NodeEditorWindow.current).OnRename();
                     if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target))) {

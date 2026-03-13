@@ -1,12 +1,9 @@
 <img align="right" width="100" height="100" src="https://user-images.githubusercontent.com/37786733/41541140-71602302-731a-11e8-9434-79b3a57292b6.png">
 
-[![Discord](https://img.shields.io/discord/361769369404964864.svg)](https://discord.gg/qgPrHv4)
-[![GitHub issues](https://img.shields.io/github/issues/Siccity/xNode.svg)](https://github.com/Siccity/xNode/issues)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Siccity/xNode/master/LICENSE.md)
-[![GitHub Wiki](https://img.shields.io/badge/wiki-available-brightgreen.svg)](https://github.com/Siccity/xNode/wiki)
-[![openupm](https://img.shields.io/npm/v/com.github.siccity.xnode?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.github.siccity.xnode/)
+This is a fork of the original [xNode](https://github.com/Siccity/xNode) used by the Bard Dialogue System. \
+It comes with [xNode Groups](https://github.com/Siccity/xNodeGroups) plugin pre-installed and features some minor performance and UX tweaks.
 
-[Downloads](https://github.com/Siccity/xNode/releases) / [Asset Store](http://u3d.as/108S) / [Documentation](https://github.com/Siccity/xNode/wiki)
+[Documentation](https://github.com/blahnumbers/xNode/wiki)
 
 Support xNode on [Ko-fi](https://ko-fi.com/Z8Z5DYWA) or [Patreon](https://www.patreon.com/thorbrigsted)
 
@@ -111,11 +108,3 @@ public class MathNode : Node {
     }
 }
 ```
-
-### Plugins
-Plugins are repositories that add functionality to xNode
-* [xNodeGroups](https://github.com/Siccity/xNodeGroups): adds resizable groups
-
-### Community
-Join the [Discord](https://discord.gg/qgPrHv4 "Join Discord server") server to leave feedback or get support.
-Feel free to also leave suggestions/requests in the [issues](https://github.com/Siccity/xNode/issues "Go to Issues") page.

@@ -63,9 +63,10 @@ namespace XNodeEditor {
                     lastMousePosition = e.mousePosition;
                     break;
                 case EventType.ScrollWheel:
+                    if (Mathf.Abs(e.delta.x) > Mathf.Abs(e.delta.y)) break;
+                    if (Mathf.Abs(e.delta.y) < 0.1f) break;
                     float oldZoom = zoom;
-                    if (e.delta.y > 0) zoom += 0.1f * zoom;
-                    else zoom -= 0.1f * zoom;
+                    zoom += e.delta.y * zoom;
                     if (NodeEditorPreferences.GetSettings().zoomToMouse) panOffset += (1 - oldZoom / zoom) * (WindowToGridPosition(e.mousePosition) + panOffset);
                     break;
                 case EventType.MouseDrag:
