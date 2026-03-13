@@ -113,7 +113,7 @@ namespace XNodeEditor {
         }
 
         /// <summary> Create editor window </summary>
-        MenuItem("Window/xNode/New Window", false, 100)]
+        [MenuItem("Window/xNode/New Window", false, 100)]
         public static NodeEditorWindow Init() {
             NodeEditorWindow w = CreateInstance<NodeEditorWindow>();
             w.titleContent = new GUIContent("xNode");
