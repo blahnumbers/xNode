@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace XNodeEditor {
         public Rect position { get { return window.position; } set { window.position = value; } }
         /// <summary> Are we currently renaming a node? </summary>
         protected bool isRenaming;
+        protected readonly Dictionary<(Color, Color), Gradient> gradientCache = new();
 
         public virtual void OnGUI() { }
 
@@ -67,23 +69,9 @@ namespace XNodeEditor {
         }
 
         /// <summary>
-        /// Add items for the context menu when right-clicking this node.
-        /// Override to add custom menu items.
+        /// Generic implementation for context menu generation
         /// </summary>
-        /// <param name="menu"></param>
-        /// <param name="compatibleType">Use it to filter only nodes with ports value type, compatible with this type</param>
-        /// <param name="direction">Direction of the compatiblity</param>
-        public virtual void AddContextMenuItems(GenericMenu menu, Type compatibleType = null, XNode.NodePort.IO direction = XNode.NodePort.IO.Input) {
-            Vector2 pos = NodeEditorWindow.current.WindowToGridPosition(Event.current.mousePosition);
-
-            Type[] nodeTypes;
-
-            if (compatibleType != null && NodeEditorPreferences.GetSettings().createFilter) {
-                nodeTypes = NodeEditorUtilities.GetCompatibleNodesTypes(NodeEditorReflection.nodeTypes, compatibleType, direction).OrderBy(GetNodeMenuOrder).ToArray();
-            } else {
-                nodeTypes = NodeEditorReflection.nodeTypes.OrderBy(GetNodeMenuOrder).ToArray();
-            }
-
+        private void AddContextMenuItemsInternal(GenericMenu menu, Vector2 pos, Type[] nodeTypes) {
             for (int i = 0; i < nodeTypes.Length; i++) {
                 Type type = nodeTypes[i];
 
@@ -113,15 +101,52 @@ namespace XNodeEditor {
             menu.AddCustomContextMenuItems(target);
         }
 
+        /// <summary>
+        /// Add items for the context menu when right-clicking this node.
+        /// Override to add custom menu items.
+        /// </summary>
+        /// <param name="menu"></param>
+        /// <param name="compatibleType">Use it to filter only nodes with ports value type, compatible with this type</param>
+        /// <param name="direction">Direction of the compatiblity</param>
+        public virtual void AddContextMenuItems(GenericMenu menu, Type compatibleType = null, XNode.NodePort.IO direction = XNode.NodePort.IO.Input) {
+            Type[] nodeTypes;
+            if (compatibleType != null && NodeEditorPreferences.GetSettings().createFilter) {
+                nodeTypes = NodeEditorUtilities.GetCompatibleNodesTypes(NodeEditorReflection.nodeTypes, compatibleType, direction).OrderBy(GetNodeMenuOrder).ToArray();
+            } else {
+                nodeTypes = NodeEditorReflection.nodeTypes.OrderBy(GetNodeMenuOrder).ToArray();
+            }
+            AddContextMenuItemsInternal(menu, NodeEditorWindow.current.WindowToGridPosition(Event.current.mousePosition), nodeTypes);
+        }
+        
+        /// <summary>
+        /// Add items for the context menu when right-clicking this node. Override to add custom menu items.
+        /// This is deliberately an implementation from an earlier release of xNode to properly allow multiple
+        /// without going through reflection hoops.
+        /// </summary>
+        public virtual void AddContextMenuItems(GenericMenu menu, Type[] allowedTypes) {
+            var nodeTypes = allowedTypes.OrderBy(type => GetNodeMenuOrder(type)).ToArray();
+            AddContextMenuItemsInternal(menu, NodeEditorWindow.current.WindowToGridPosition(Event.current.mousePosition), nodeTypes);
+        }
+
         /// <summary> Returned gradient is used to color noodles </summary>
         /// <param name="output"> The output this noodle comes from. Never null. </param>
         /// <param name="input"> The output this noodle comes from. Can be null if we are dragging the noodle. </param>
         public virtual Gradient GetNoodleGradient(XNode.NodePort output, XNode.NodePort input) {
-            Gradient grad = new Gradient();
+            Color a = GetTypeColor(output.ValueType);
+            Color b = input != null ? GetTypeColor(input.ValueType) : default;
+            // If hovering over an existing noodle, apply white tint
+            if (input != null && (window.hoveredPort == output || window.hoveredPort == input)) {
+                a = Color.Lerp(a, Color.white, 0.8f);
+                b = Color.Lerp(b, Color.white, 0.8f);
+            }
+            // Look for a cached match to prevent new() alloc
+            if (gradientCache.TryGetValue((a, b), out Gradient grad)) {
+                return grad;
+            }
 
+            grad = new Gradient();
             // If dragging the noodle, draw solid, slightly transparent
             if (input == null) {
-                Color a = GetTypeColor(output.ValueType);
                 grad.SetKeys(
                     new GradientColorKey[] { new GradientColorKey(a, 0f) },
                     new GradientAlphaKey[] { new GradientAlphaKey(0.6f, 0f) }
@@ -129,18 +154,12 @@ namespace XNodeEditor {
             }
             // If normal, draw gradient fading from one input color to the other
             else {
-                Color a = GetTypeColor(output.ValueType);
-                Color b = GetTypeColor(input.ValueType);
-                // If any port is hovered, tint white
-                if (window.hoveredPort == output || window.hoveredPort == input) {
-                    a = Color.Lerp(a, Color.white, 0.8f);
-                    b = Color.Lerp(b, Color.white, 0.8f);
-                }
                 grad.SetKeys(
                     new GradientColorKey[] { new GradientColorKey(a, 0f), new GradientColorKey(b, 1f) },
                     new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) }
                 );
             }
+            gradientCache.Add((a, b), grad);
             return grad;
         }
 

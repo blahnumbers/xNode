@@ -237,7 +237,7 @@ namespace XNodeEditor {
                             // Open context menu for auto-connection if there is no target node
                             else if (draggedOutputTarget == null && NodeEditorPreferences.GetSettings().dragToCreate && autoConnectOutput != null) {
                                 GenericMenu menu = new GenericMenu();
-                                graphEditor.AddContextMenuItems(menu, draggedOutput.ValueType);
+                                graphEditor.AddContextMenuItems(menu, null);
                                 menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                             }
                             //Release dragged connection
@@ -299,7 +299,7 @@ namespace XNodeEditor {
                             } else if (!IsHoveringNode) {
                                 autoConnectOutput = null;
                                 GenericMenu menu = new GenericMenu();
-                                graphEditor.AddContextMenuItems(menu);
+                                graphEditor.AddContextMenuItems(menu, null);
                                 menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                             }
                         }
