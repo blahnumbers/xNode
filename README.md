@@ -3,8 +3,6 @@
 This is a fork of the original [xNode](https://github.com/Siccity/xNode) used by the Bard Dialogue System. \
 It comes with [xNode Groups](https://github.com/Siccity/xNodeGroups) plugin pre-installed and features some minor performance and UX tweaks.
 
-[Documentation](https://github.com/blahnumbers/xNode/wiki)
-
 Support xNode on [Ko-fi](https://ko-fi.com/Z8Z5DYWA) or [Patreon](https://www.patreon.com/thorbrigsted)
 
 For full Odin support, consider using [KAJed82's fork](https://github.com/KAJed82/xNode)
@@ -28,14 +26,8 @@ With a minimal footprint, it is ideal as a base for custom state machines, dialo
 * Custom node inspector code is very similar to regular custom inspector code
 * Supported from Unity 5.3 and up
 
-### Wiki
-* [Getting started](https://github.com/Siccity/xNode/wiki/Getting%20Started) - create your very first node node and graph
-* [Examples branch](https://github.com/Siccity/xNode/tree/examples) - look at other small projects
-
 ### Installation
-<details><summary>Instructions</summary>
 
-### Installing with Unity Package Manager
 ***Via Git URL***
 *(Requires Unity version 2018.3.0b7  or above)*
 
@@ -43,68 +35,9 @@ To install this project as a [Git dependency](https://docs.unity3d.com/Manual/up
 add the following line to your project's `manifest.json`:
 
 ```
-"com.github.siccity.xnode": "https://github.com/siccity/xNode.git"
+"com.github.blahnumbers.xnode": "https://github.com/blahnumbers/xNode.git"
 ```
 
 You will need to have Git installed and available in your system's PATH.
 
 If you are using [Assembly Definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) in your project, you will need to add `XNode` and/or `XNodeEditor` as Assembly Definition References.
-
-***Via OpenUPM***
-
-The package is available on the [openupm registry](https://openupm.com). It's recommended to install it via [openupm-cli](https://github.com/openupm/openupm-cli).
-
-```
-openupm add com.github.siccity.xnode
-```
-
-### Installing with git
-***Via Git Submodule***
-
-To add xNode as a [submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in your existing git project,
-run the following git command from your project root:
-
-```
-git submodule add git@github.com:Siccity/xNode.git Assets/Submodules/xNode
-```
-
-### Installing 'the old way'
-If no source control or package manager is available to you, you can simply copy/paste the source files into your assets folder.
-
-</details>
-
-### Node example:
-```csharp
-// public classes deriving from Node are registered as nodes for use within a graph
-public class MathNode : Node {
-    // Adding [Input] or [Output] is all you need to do to register a field as a valid port on your node 
-    [Input] public float a;
-    [Input] public float b;
-    // The value of an output node field is not used for anything, but could be used for caching output results
-    [Output] public float result;
-    [Output] public float sum;
-
-    // The value of 'mathType' will be displayed on the node in an editable format, similar to the inspector
-    public MathType mathType = MathType.Add;
-    public enum MathType { Add, Subtract, Multiply, Divide}
-    
-    // GetValue should be overridden to return a value for any specified output port
-    public override object GetValue(NodePort port) {
-
-        // Get new a and b values from input connections. Fallback to field values if input is not connected
-        float a = GetInputValue<float>("a", this.a);
-        float b = GetInputValue<float>("b", this.b);
-
-        // After you've gotten your input values, you can perform your calculations and return a value
-        if (port.fieldName == "result")
-            switch(mathType) {
-                case MathType.Add: default: return a + b;
-                case MathType.Subtract: return a - b;
-                case MathType.Multiply: return a * b;
-                case MathType.Divide: return a / b;
-            }
-        else if (port.fieldName == "sum") return a + b;
-        else return 0f;
-    }
-}
-```
