@@ -66,12 +66,24 @@ namespace XNodeEditor {
             }
         }
 
-        public Dictionary<XNode.Node, Vector2> nodeSizes { get { return _nodeSizes; } }
-        private Dictionary<XNode.Node, Vector2> _nodeSizes = new Dictionary<XNode.Node, Vector2>();
+        public Dictionary<XNode.Node, Vector2> nodeSizes => _nodeSizes;
+        private Dictionary<XNode.Node, Vector2> _nodeSizes = new();
         public XNode.NodeGraph graph;
-        public Vector2 panOffset { get { return _panOffset; } set { _panOffset = value; Repaint(); } }
+        public Vector2 panOffset {
+			get => _panOffset;
+			set {
+				_panOffset = value;
+				Repaint();
+			}
+		}
         private Vector2 _panOffset;
-        public float zoom { get { return _zoom; } set { _zoom = Mathf.Clamp(value, NodeEditorPreferences.GetSettings().minZoom, NodeEditorPreferences.GetSettings().maxZoom); Repaint(); } }
+        public float zoom {
+			get => _zoom;
+			set {
+				_zoom = Mathf.Clamp(value, NodeEditorPreferences.GetSettings().minZoom, NodeEditorPreferences.GetSettings().maxZoom);
+				Repaint();
+			}
+		}
         private float _zoom = 1;
 
         void OnFocus() {
@@ -81,12 +93,12 @@ namespace XNodeEditor {
                 graphEditor.OnWindowFocus();
                 if (NodeEditorPreferences.GetSettings().autoSave) AssetDatabase.SaveAssets();
             }
-            
+
             dragThreshold = Math.Max(1f, Screen.width / 1000f);
         }
         
         void OnLostFocus() {
-            if (graphEditor != null) graphEditor.OnWindowFocusLost();
+            graphEditor?.OnWindowFocusLost();
         }
 
         [InitializeOnLoadMethod]
@@ -150,7 +162,7 @@ namespace XNodeEditor {
         }
 
         public Vector2 GridToWindowPosition(Vector2 gridPosition) {
-            return (position.size * 0.5f) + (panOffset / zoom) + (gridPosition / zoom);
+            return (position.size * 0.5f) + (panOffset + gridPosition) / zoom;
         }
 
         public Rect GridToWindowRectNoClipped(Rect gridRect) {
@@ -174,21 +186,27 @@ namespace XNodeEditor {
 
         public void SelectNode(XNode.Node node, bool add) {
             if (add) {
-                List<Object> selection = new List<Object>(Selection.objects);
-                selection.Add(node);
+                List<Object> selection = new(Selection.objects) { node };
                 Selection.objects = selection.ToArray();
-            } else Selection.objects = new Object[] { node };
+            }
+            else {
+                Selection.objects = new Object[] { node };
+            }
         }
 
         public void DeselectNode(XNode.Node node) {
-            List<Object> selection = new List<Object>(Selection.objects);
+            List<Object> selection = new(Selection.objects);
             selection.Remove(node);
             Selection.objects = selection.ToArray();
         }
 
         [OnOpenAsset(0)]
         public static bool OnOpen(int instanceID, int line) {
+#if UNITY_6000_3_OR_NEWER
+            XNode.NodeGraph nodeGraph = EditorUtility.EntityIdToObject(instanceID) as XNode.NodeGraph;
+#else
             XNode.NodeGraph nodeGraph = EditorUtility.InstanceIDToObject(instanceID) as XNode.NodeGraph;
+#endif
             if (nodeGraph != null) {
                 Open(nodeGraph);
                 return true;
@@ -199,12 +217,15 @@ namespace XNodeEditor {
         /// <summary>Open the provided graph in the NodeEditor</summary>
         public static NodeEditorWindow Open(XNode.NodeGraph graph) {
             if (!graph) return null;
+            current = current != null ? current : GetWindow(typeof(NodeEditorWindow), false, null, true) as NodeEditorWindow;
 
-            NodeEditorWindow w = current != null ? current : GetWindow(typeof(NodeEditorWindow), false, null, true) as NodeEditorWindow;
+            var w = current;
             w.wantsMouseMove = true;
             w.graph = graph;
             w.titleContent.text = $"xNode [{graph.name}]";
             RepaintAll();
+
+            w.Home();
             return w;
         }
 
