@@ -67,7 +67,9 @@ namespace XNodeEditor {
                     if (Mathf.Abs(e.delta.y) < 0.1f) break;
                     float oldZoom = zoom;
                     zoom += e.delta.y * zoom;
-                    if (NodeEditorPreferences.GetSettings().zoomToMouse) panOffset += (1 - oldZoom / zoom) * (WindowToGridPosition(e.mousePosition) + panOffset);
+                    if (NodeEditorPreferences.GetSettings().zoomToMouse) {
+                        panOffset += (1 - oldZoom / zoom) * (WindowToGridPosition(e.mousePosition) + panOffset);
+                    }
                     break;
                 case EventType.MouseDrag:
                     if (e.button == 0) {
@@ -106,16 +108,14 @@ namespace XNodeEditor {
                                     Vector2 offset = node.position - initial;
                                     if (offset.sqrMagnitude > 0) {
                                         foreach (XNode.NodePort output in node.Outputs) {
-                                            Rect rect;
-                                            if (portConnectionPoints.TryGetValue(output, out rect)) {
+                                            if (portConnectionPoints.TryGetValue(output, out var rect)) {
                                                 rect.position += offset;
                                                 portConnectionPoints[output] = rect;
                                             }
                                         }
 
                                         foreach (XNode.NodePort input in node.Inputs) {
-                                            Rect rect;
-                                            if (portConnectionPoints.TryGetValue(input, out rect)) {
+                                            if (portConnectionPoints.TryGetValue(input, out var rect)) {
                                                 rect.position += offset;
                                                 portConnectionPoints[input] = rect;
                                             }
@@ -394,16 +394,11 @@ namespace XNodeEditor {
                 float zoomX = bounds.x / (position.width - margin);
                 float zoomY = bounds.y / (position.height - margin);
 
-                _zoom = Mathf.Max(zoomX, zoomY);
-                _zoom = Mathf.Clamp(
-                    zoom,
-                    NodeEditorPreferences.GetSettings().minZoom,
-                    NodeEditorPreferences.GetSettings().maxZoom
-                );
-                panOffset = -center;
+                _panOffset = -center;
+                zoom = Mathf.Max(zoomX, zoomY);
             } else {
-                _zoom = 1.25f;
-                panOffset = Vector2.zero;
+                _panOffset = Vector2.zero;
+                zoom = 1.25f;
             }
         }
 
