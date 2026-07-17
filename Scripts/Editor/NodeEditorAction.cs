@@ -382,12 +382,27 @@ namespace XNodeEditor {
         /// <summary> Puts all selected nodes in focus. If no nodes are present, resets view and zoom to to origin </summary>
         public void Home() {
             var nodes = Selection.objects.Where(o => o is XNode.Node).Cast<XNode.Node>().ToList();
+            if (nodes.Count == 0) nodes = current.graph.nodes;
             if (nodes.Count > 0) {
                 Vector2 minPos = nodes.Select(x => x.position).Aggregate((x, y) => new Vector2(Mathf.Min(x.x, y.x), Mathf.Min(x.y, y.y)));
                 Vector2 maxPos = nodes.Select(x => x.position + (nodeSizes.ContainsKey(x) ? nodeSizes[x] : Vector2.zero)).Aggregate((x, y) => new Vector2(Mathf.Max(x.x, y.x), Mathf.Max(x.y, y.y)));
-                panOffset = -(minPos + (maxPos - minPos) / 2f);
+
+                Vector2 bounds = maxPos - minPos;
+                Vector2 center = (minPos + maxPos) * 0.5f;
+
+                const float margin = 25f;
+                float zoomX = bounds.x / (position.width - margin);
+                float zoomY = bounds.y / (position.height - margin);
+
+                _zoom = Mathf.Max(zoomX, zoomY);
+                _zoom = Mathf.Clamp(
+                    zoom,
+                    NodeEditorPreferences.GetSettings().minZoom,
+                    NodeEditorPreferences.GetSettings().maxZoom
+                );
+                panOffset = -center;
             } else {
-                zoom = 2;
+                _zoom = 1.25f;
                 panOffset = Vector2.zero;
             }
         }
