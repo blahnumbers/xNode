@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 using XNodeEditor.Internal;
 #if UNITY_2019_1_OR_NEWER && USE_ADVANCED_GENERIC_MENU
 using GenericMenu = XNodeEditor.AdvancedGenericMenu;
@@ -21,11 +21,14 @@ namespace XNodeEditor {
         private static readonly Vector3[] polyLineTempArray = new Vector3[2];
         private readonly Dictionary<XNode.Node, List<XNode.NodePort>> _nodePorts = new();
         private readonly List<Vector2> _gridPointsBuffer = new(16);
+        private Rect _viewport;
 
         protected virtual void OnGUI() {
             Event e = Event.current;
             Matrix4x4 m = GUI.matrix;
             if (graph == null) return;
+
+            _viewport = new(0, 0, position.width, position.height);
             ValidateGraphEditor();
             Controls();
 
@@ -50,8 +53,6 @@ namespace XNodeEditor {
             GUI.EndClip();
 
             GUIUtility.ScaleAroundPivot(Vector2.one / zoom, rect.size * 0.5f);
-            Vector4 padding = new Vector4(0, topPadding, 0, 0);
-            padding *= zoom;
             GUI.BeginClip(new Rect(-((rect.width * zoom) - rect.width) * 0.5f, -(((rect.height * zoom) - rect.height) * 0.5f) + (topPadding * zoom),
                 rect.width * zoom,
                 rect.height * zoom));
@@ -59,15 +60,14 @@ namespace XNodeEditor {
 
         public static void EndZoomed(Rect rect, float zoom, float topPadding) {
             GUIUtility.ScaleAroundPivot(Vector2.one * zoom, rect.size * 0.5f);
-            Vector3 offset = new Vector3(
-                (((rect.width * zoom) - rect.width) * 0.5f),
-                (((rect.height * zoom) - rect.height) * 0.5f) + (-topPadding * zoom) + topPadding,
+            Vector3 offset = new(
+                ((rect.width * zoom) - rect.width) * 0.5f,
+                (((rect.height * zoom) - rect.height) * 0.5f) - (topPadding * zoom) + topPadding,
                 0);
             GUI.matrix = Matrix4x4.TRS(offset, Quaternion.identity, Vector3.one);
         }
 
         public void DrawGrid(Rect rect, float zoom, Vector2 panOffset) {
-
             rect.position = Vector2.zero;
 
             Vector2 center = rect.size / 2f;
@@ -95,7 +95,7 @@ namespace XNodeEditor {
             if (currentActivity == NodeActivity.DragGrid) {
                 Vector2 curPos = WindowToGridPosition(Event.current.mousePosition);
                 Vector2 size = curPos - dragBoxStart;
-                Rect r = new Rect(dragBoxStart, size);
+                Rect r = new(dragBoxStart, size);
                 r.position = GridToWindowPosition(r.position);
                 r.size /= zoom;
                 Handles.DrawSolidRectangleWithOutline(r, new Color(0, 0, 0, 0.1f), new Color(1, 1, 1, 0.6f));
@@ -167,6 +167,7 @@ namespace XNodeEditor {
             switch (path) {
                 case NoodlePath.Curvy:
                     Vector2 outputTangent = Vector2.right;
+
                     for (int i = 0; i < length - 1; i++) {
                         Vector2 inputTangent;
                         // Cached most variables that repeat themselves here to avoid so many indexer calls :p
@@ -203,12 +204,21 @@ namespace XNodeEditor {
                                 draw++;
                                 if (draw >= 2) draw = -2;
                                 if (draw < 0) continue;
-                                if (draw == 0) bezierPrevious = CalculateBezierPoint(point_a, tangent_a, tangent_b, point_b, (j - 1f) / (float) division);
+                                if (draw == 0) bezierPrevious = CalculateBezierPoint(point_a, tangent_a, tangent_b, point_b, (j - 1f) / division);
                             }
-                            if (i == length - 2)
-                                Handles.color = gradient.Evaluate((j + 1f) / division);
                             Vector2 bezierNext = CalculateBezierPoint(point_a, tangent_a, tangent_b, point_b, j / (float) division);
-                            DrawAAPolyLineNonAlloc(thickness, bezierPrevious, bezierNext);
+                            
+                            float minX, maxX, minY, maxY;
+                            if (bezierPrevious.x > bezierNext.x) { minX = bezierNext.x; maxX = bezierPrevious.x; }
+                            else { minX = bezierPrevious.x; maxX = bezierNext.x; }
+                            if (bezierPrevious.y > bezierNext.y) { minY = bezierNext.y; maxY = bezierPrevious.y; }
+                            else { minY = bezierPrevious.y; maxY = bezierNext.y; }
+                            var bezierBounds = Rect.MinMaxRect(minX, minY, maxX, maxY);
+
+                            if (_viewport.Overlaps(bezierBounds)) {
+                                if (i == length - 2) Handles.color = gradient.Evaluate((j + 1f) / division);
+                                DrawAAPolyLineNonAlloc(thickness, bezierPrevious, bezierNext);
+                            }
                             bezierPrevious = bezierNext;
                         }
                         outputTangent = -inputTangent;
@@ -377,9 +387,9 @@ namespace XNodeEditor {
 
                         // Loop through reroute points again and draw the points
                         for (int i = 0; i < reroutePoints.Count; i++) {
-                            RerouteReference rerouteRef = new RerouteReference(output, k, i);
+                            RerouteReference rerouteRef = new(output, k, i);
                             // Draw reroute point at position
-                            Rect rect = new Rect(reroutePoints[i], new Vector2(12, 12));
+                            Rect rect = new(reroutePoints[i], new Vector2(12, 12));
                             rect.position = new Vector2(rect.position.x - 6, rect.position.y - 6);
                             rect = GridToWindowRect(rect);
 
